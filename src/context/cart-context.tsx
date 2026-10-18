@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   createContext,
@@ -47,8 +47,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Load the saved cart after mount (avoids server/client hydration mismatch)
   useEffect(() => {
     const stored = readStorage<unknown>(STORAGE_KEY, []);
+    // Loading from localStorage after mount is intentional
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (Array.isArray(stored)) setItems(stored.filter(isValidItem));
     setHydrated(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
   // Persist on every change, but only after the first load

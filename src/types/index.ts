@@ -82,3 +82,10 @@ export interface CategoryInput {
   name: string;
   image: string;
 }
+
+export interface SimulatedOrder {
+  items: CartItem[];
+  total: number;
+  customer: CheckoutFormData;
+  placedAt: string;
+}
