@@ -7,6 +7,7 @@ import { ApiError } from "@/lib/api";
 import { isValidProduct } from "@/lib/product-utils";
 import { getCategoryBySlug, getProductsByCategory } from "@/services/categories";
 import type { Category } from "@/types";
+import { getStorefrontProducts } from "@/lib/catalog";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -51,9 +52,8 @@ export default async function CategoryPage({ params }: Props) {
       </EmptyState>
     );
   }
-
-  const products = (await getProductsByCategory(category.id)).filter(
-    isValidProduct,
+    const products = getStorefrontProducts(
+    await getProductsByCategory(category.id),
   );
 
   return (

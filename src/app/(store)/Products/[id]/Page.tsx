@@ -10,6 +10,7 @@ import { isValidProduct, truncate } from "@/lib/product-utils";
 import { cleanImageUrls, formatPrice } from "@/lib/utils";
 import { getProduct, getRelatedProducts } from "@/services/products";
 import type { Product } from "@/types";
+import { isStorefrontProduct } from "@/lib/catalog";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -58,7 +59,7 @@ export default async function ProductDetailPage({ params }: Props) {
   }
 
   const related = (await getRelatedProducts(product.id).catch(() => []))
-    .filter(isValidProduct)
+    .filter(isStorefrontProduct)
     .filter((p) => p.id !== product.id)
     .slice(0, 4);
 

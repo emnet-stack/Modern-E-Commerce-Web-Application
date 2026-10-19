@@ -1,5 +1,5 @@
 "use client";
-
+import { addOwned, isOwned } from "@/lib/owned";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
@@ -94,13 +94,28 @@ function ProductForm({ categories, product }: { categories: Category[]; product:
 
     try {
       const saved = isEdit ? await updateProduct(product.id, input) : await createProduct(input);
+      if (!isEdit) addOwned("products", saved.id);
       router.push(`/admin/products/${saved.id}`);
     } catch (error) {
       setFormError(getErrorMessage(error));
       setSubmitting(false);
     }
   }
-
+  if (isEdit && !isOwned("products", product.id)) {
+    return (
+      <div className="space-y-4">
+        <Alert>
+          <AlertDescription>
+            This is a shared product you did not create in this browser, so editing is disabled
+            to protect other students. Create your own test product to try editing.
+          </AlertDescription>
+        </Alert>
+        <Button asChild variant="outline">
+          <Link href="/admin/products">Back to products</Link>
+        </Button>
+      </div>
+    );
+  }
   return (
     <div className="space-y-6">
       <PageHeader

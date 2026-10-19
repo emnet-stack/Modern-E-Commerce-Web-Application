@@ -1,12 +1,14 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { ProductGrid } from "@/components/products/product-grid";
 import { SafeImage } from "@/components/shared/safe-image";
 import { EmptyState, ErrorState } from "@/components/shared/states";
 import { Button } from "@/components/ui/button";
-import { isValidProduct } from "@/lib/product-utils";
+import { getStorefrontCategories, getStorefrontProducts } from "@/lib/catalog";
 import { cleanImageUrls } from "@/lib/utils";
 import { getCategories } from "@/services/categories";
 import { getProducts } from "@/services/products";
+
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const [productsResult, categoriesResult] = await Promise.allSettled([
@@ -14,23 +16,19 @@ export default async function HomePage() {
     getCategories(),
   ]);
 
-  const categories =
-    categoriesResult.status === "fulfilled"
-      ? categoriesResult.value
-          .filter((c) => c && typeof c.slug === "string" && c.name)
-          .slice(0, 6)
+  const products =
+    productsResult.status === "fulfilled"
+      ? getStorefrontProducts(productsResult.value)
       : null;
 
-  const featured =
-    productsResult.status === "fulfilled"
-      ? productsResult.value
-          .filter(isValidProduct)
-          .sort(
-            (a, b) =>
-              (Date.parse(b.creationAt) || 0) - (Date.parse(a.creationAt) || 0),
-          )
-          .slice(0, 8)
+  const categories =
+    categoriesResult.status === "fulfilled" && products
+      ? getStorefrontCategories(categoriesResult.value, products).slice(0, 6)
       : null;
+
+  const featured = products
+    ? [...products].sort((a, b) => a.id - b.id).slice(0, 8)
+    : null;
 
   return (
     <div className="space-y-10">
@@ -62,9 +60,7 @@ export default async function HomePage() {
           </Link>
         </div>
         {categories === null ? (
-          <ErrorState
-            message="Categories could not be loaded right now. Refresh the page to try again."
-          />
+          <ErrorState message="Categories could not be loaded right now. Refresh the page to try again." />
         ) : categories.length === 0 ? (
           <EmptyState title="No categories available" />
         ) : (
@@ -92,7 +88,7 @@ export default async function HomePage() {
       <section aria-labelledby="featured-heading" className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 id="featured-heading" className="text-xl font-semibold">
-            Latest products
+            Featured products
           </h2>
           <Link href="/products" className="text-sm underline">
             View all

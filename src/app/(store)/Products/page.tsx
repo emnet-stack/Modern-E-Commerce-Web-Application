@@ -1,6 +1,6 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { ProductsView } from "@/components/products/products-view";
-import { isValidProduct } from "@/lib/product-utils";
+import { getStorefrontCategories, getStorefrontProducts } from "@/lib/catalog";
 import { getCategories } from "@/services/categories";
 import { getProducts } from "@/services/products";
 
@@ -9,21 +9,21 @@ export const metadata: Metadata = {
   description: "Browse, search, filter and sort all products.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function ProductsPage() {
-  // If products fail, the (store)/error.tsx boundary shows a retry state.
-  // Categories failing should not block the product list.
-  const [products, categories] = await Promise.all([
+  const [allProducts, allCategories] = await Promise.all([
     getProducts(),
     getCategories().catch(() => []),
   ]);
 
+  const products = getStorefrontProducts(allProducts);
+  const categories = getStorefrontCategories(allCategories, products);
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Products</h1>
-      <ProductsView
-        products={products.filter(isValidProduct)}
-        categories={categories}
-      />
+      <ProductsView products={products} categories={categories} />
     </div>
   );
 }

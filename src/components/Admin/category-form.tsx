@@ -14,6 +14,7 @@ import { formatDate, getErrorMessage } from "@/lib/utils";
 import { isHttpUrl } from "@/lib/validation";
 import { createCategory, getCategory, updateCategory } from "@/services/categories";
 import type { Category } from "@/types";
+import { addOwned, isOwned } from "@/lib/owned";
 
 type Errors = { name?: string; image?: string; confirm?: string };
 
@@ -43,15 +44,35 @@ function CategoryForm({ category }: { category: Category | null }) {
     setSubmitting(true);
     const input = { name: name.trim(), image: image.trim() };
     try {
-      if (isEdit) await updateCategory(category.id, input);
-      else await createCategory(input);
+            if (isEdit) {
+        await updateCategory(category.id, input);
+      } else {
+        const created = await createCategory(input);
+        addOwned("categories", created.id);
+      }
       router.push("/admin/categories");
     } catch (error) {
       setFormError(getErrorMessage(error));
       setSubmitting(false);
     }
-  }
 
+  }
+  if (isEdit && !isOwned("categories", category.id)) {
+    return (
+      <div className="space-y-4">
+        <Alert>
+          <AlertDescription>
+            This is a shared category you did not create in this browser, so editing is disabled
+            to protect other students. Create your own test category to try editing.
+          </AlertDescription>
+        </Alert>
+        <Button asChild variant="outline">
+          <Link href="/admin/categories">Back to categories</Link>
+        </Button>
+      </div>
+    );
+  }
+  
   return (
     <div className="space-y-6">
       <PageHeader

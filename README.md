@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Modern E-Commerce Web Application
 
-## Getting Started
+A responsive e-commerce storefront and admin dashboard built as the BE-XPERT Frontend Capstone.
 
-First, run the development server:
+**Live demo:** _add your Vercel URL here_
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Technologies
+- Next.js (App Router), TypeScript
+- Tailwind CSS, shadcn/ui, lucide-react
+- next-themes (light, dark, system)
+- EscuelaJS public API
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Features
+**Storefront:** home, product listing with search, category, price filter and sorting, product details with related products, categories, cart (localStorage), simulated checkout, registration, login, profile.
+**Admin (`/admin`):** overview statistics, product management (list, search, view, create, edit), category management (list, create, edit), read-only user list and details.
+**General:** responsive mobile-first UI, theme toggle, loading, error and empty states, accessible forms, dynamic metadata.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Setup
+1. Clone the repository and run `npm install`.
+2. Copy `.env.example` to `.env.local`:
+   `NEXT_PUBLIC_API_URL=https://api.escuelajs.co/api/v1`
+3. Run `npm run dev` and open http://localhost:3000.
+4. Production check: `npm run build`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Project structure
+- `src/app`: routes (`(store)` group for the storefront, `admin` for the dashboard)
+- `src/components`: UI grouped by feature (layout, products, categories, cart, auth, admin, shared, ui)
+- `src/services`: all API calls (products, categories, auth, users)
+- `src/lib`: API client, storage helpers, validation, utilities
+- `src/context`: cart and auth state
+- `src/types`: TypeScript types
 
-## Learn More
+## API integration
+All requests go through `src/lib/api.ts` (`apiFetch`), which adds the base URL, JSON headers, the Bearer token when needed, and converts network and HTTP failures into a typed `ApiError`.
 
-To learn more about Next.js, take a look at the following resources:
+Endpoints used: `GET /products`, `/products/{id}`, `/products/{id}/related`, `/categories`, `/categories/slug/{slug}`, `/categories/{id}`, `/categories/{id}/products`, `POST/PUT /products`, `POST/PUT /categories`, `GET /users`, `/users/{id}`, `POST /users`, `POST /users/is-available`, `POST /auth/login`, `GET /auth/profile`, `POST /auth/refresh-token`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Products are fetched once and searched, filtered and sorted on the client, because the API's price filter needs both bounds and sorting is limited.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Authentication, authorization and limitations
+- Tokens are stored in `localStorage`. This is acceptable for a demo but is not equivalent to a backend-managed httpOnly session.
+- `/checkout`, `/checkout/success` and `/profile` use a client-side guard. Client-side protection is not sufficient for production; real protection must be enforced on a server.
+- The API provides a `role` field but no trusted role-based authorization. The admin dashboard checks `role === "admin"` from `/auth/profile` as a **development-only access mechanism** and is not secure authorization.
+- Checkout is **simulated**: no payment, shipping or order is created. The order summary is kept only in `sessionStorage`.
+- The API is shared. There are no delete operations, and edit forms require confirming that the record is a test record.
+- The user list depends on API permissions; failures show an "unavailable" state.
 
-## Deploy on Vercel
+## Testing checklist
+See the capstone brief (section 34); every item was verified manually before submission.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- The shared EscuelaJS API contains many placeholder and test records created by other students. The storefront filters these out (see src/lib/catalog.ts) while still using only live API data; the admin dashboard shows all records.

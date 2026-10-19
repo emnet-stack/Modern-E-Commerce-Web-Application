@@ -1,19 +1,32 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import { SafeImage } from "@/components/shared/safe-image";
 import { EmptyState } from "@/components/shared/states";
+import { getStorefrontCategories, getStorefrontProducts } from "@/lib/catalog";
 import { cleanImageUrls } from "@/lib/utils";
 import { getCategories } from "@/services/categories";
+import { getProducts } from "@/services/products";
 
 export const metadata: Metadata = {
   title: "Categories",
   description: "Browse products by category.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function CategoriesPage() {
-  const categories = (await getCategories()).filter(
+  const [allCategories, allProducts] = await Promise.all([
+    getCategories(),
+    getProducts().catch(() => null),
+  ]);
+
+  const valid = allCategories.filter(
     (c) => c && typeof c.slug === "string" && c.name,
   );
+
+  const categories = allProducts
+    ? getStorefrontCategories(valid, getStorefrontProducts(allProducts))
+    : valid;
 
   return (
     <div className="space-y-6">
